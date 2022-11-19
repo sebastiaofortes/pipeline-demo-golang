@@ -6,5 +6,6 @@ import (
 )
 
 func main()  {
+	fmt.Println("Hello WorkFlow")
 	fmt.Println(hello.HelloGitHub())
 }
