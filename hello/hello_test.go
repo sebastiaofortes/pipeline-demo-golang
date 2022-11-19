@@ -13,7 +13,7 @@ func TestHelloGitHub(t *testing.T) {
 
 func TestHelloFail(t *testing.T) {
 	result := HelloGitHub()
-	if result != "Fail" {
+	if result != "Error" {
 		t.Errorf("HelloGitHub() = %s; want Hello GitHub", result)
 	}
 }
