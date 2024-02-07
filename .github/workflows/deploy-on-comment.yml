@@ -15,7 +15,7 @@ jobs:
         ref: refs/pull/${{ github.event.issue.number }}/merge
 
     - name: Setup Google Cloud Authentication
-      uses: google-github-actions/auth@v0.4.0  # Verifique se há uma versão mais recente disponível
+      uses: google-github-actions/auth@v2  # Verifique se há uma versão mais recente disponível
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
