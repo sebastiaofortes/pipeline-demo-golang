@@ -37,4 +37,3 @@ jobs:
         gcloud run deploy my-app --image gcr.io/$GCP_PROJECT/app-image --platform managed --region us-central1 --allow-unauthenticated
       env:
         GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-```
