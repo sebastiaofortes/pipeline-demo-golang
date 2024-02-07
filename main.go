@@ -6,5 +6,6 @@ import (
 )
 
 func main()  {
+	// comment
 	fmt.Println(hello.HelloGitHub())
 }
