@@ -1,0 +1,27 @@
+name: Deploy on PR comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check_comment_and_deploy:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'deploy')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.issue.number }}/merge
+
+    - name: Setup GCP credentials
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT }}
+  
+    - name: Deploy to GCP
+      run: |
+        # Comando para deploy no GCP (ajuste com seu comando específico)
+        echo "Iniciando deploy..."
+        # Exemplo: gcloud run deploy ....
