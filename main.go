@@ -6,6 +6,5 @@ import (
 )
 
 func main()  {
-	//sample code
 	fmt.Println(hello.HelloGitHub())
 }
