@@ -27,7 +27,7 @@ jobs:
       uses: google-github-actions/deploy-cloudrun@v0
       with:
         service: ${{ secrets.GCP_SERVICE_NAME }}
-        region: ${{ env.REGION }}
+        region: ${{ env.GCP_REGION }}
         # NOTE: If required, update to the appropriate source folder
         source: ./
 
