@@ -12,8 +12,14 @@ func main()  {
 	fmt.Println(hello.HelloGitHub())
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World"))
+		_, err := w.Write([]byte("Hello World"))
+		if err != nil{
+			fmt.Println(err)
+		}
 	})
 
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil{
+		fmt.Println(err)
+	}
 }
