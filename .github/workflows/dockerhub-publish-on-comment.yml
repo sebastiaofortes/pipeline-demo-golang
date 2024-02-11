@@ -16,7 +16,7 @@ jobs:
      # Gera a tag com data, hora, minutos e segundos
       - name: Set tag name with timestamp
         id: tagname
-        run: echo "::set-output name=tag::$(date +'%Y%m%d%H%M%S')"
+        run: echo "::set-output name=tag::$(date+'%Y-%m-%d-%H-%M-%S')"
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
