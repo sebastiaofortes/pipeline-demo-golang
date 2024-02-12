@@ -2,15 +2,59 @@
 
 Esse projeto configura uma pipeline de CI/CD usando GitHub Actions em uma aplicação Golang para fazer as seguintes tarefas:
 
+- Verificação da integração contínua e qualidade do código
+  - Verificação de linter no código.
+  - Verificação de testes unitários e de integração.
+  - Verificação de build
 - Criação e publicação de imagem docker no DockerHub 
-- Verificação de linter no código.
-- Verificação de testes unitários e de integração.
-- Verificação de build
 - Deploy no servioço Google Cloud Run.
 
-Você precisa seguir alguns passos.
+## Verificação da integração contínua e qualidade do código
 
-## Gerar imagem e enviar ao Dockerhub ao comentar
+O arquivo continous-integration.yaml define um pipeline de integração contínua (CI) nomeado "CI pipeline" que executa várias ações relacionadas à verificação de conformidade com a nomenclatura de branches, linting, teste e build de código, orientado principalmente para projetos Golang. Abaixo, você encontrará uma explicação detalhada de cada etapa desse pipeline:
+
+### Gatilhos do Workflow
+
+- **on:** Este pipeline é acionado por dois eventos principais:
+    - **push**: Quando há um push na branch `master` (incluindo tags, embora a especificação de tags esteja vazia aqui, indicando que o push de tags não ativa este pipeline).
+    - **pull_request**: Em qualquer pull request que vise a branch `master`.
+
+### Jobs (Tarefas)
+
+#### 1. `check_gitflow_conformance`
+- **Name**: GitFlow Branch Naming
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Contém a etapa para verificação do nome da branch.
+    - Verifica se o nome da branch segue as convenções do GitFlow (`feature/`, `bugfix/`, `hotfix/`, `release/`). Se não seguir, o script sinaliza erro e encerra o processo com `exit 1`.
+
+#### 2. `golangci`
+- **Name**: Lint
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Efetua a configuração da versão do Go, checa o código e executa o linter no código Go usando a action `golangci/golangci-lint-action@v3`.
+    - **Set up Go**: Configura o ambiente com Go versão 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Lint Go Code**: Executa o golangci-lint, que é uma ferramenta de análise estática para o código Go.
+
+#### 3. `test`
+- **Name**: Test
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Prepara o ambiente Go, checa o código e executa testes unitários.
+    - **Set up Go**: Configura o Go 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Run unit Tests.**: Executa testes unitários com cobertura e opção `-race` para detecção de race conditions, excluindo verificações com `go vet`.
+
+#### 4. `build`
+- **Name**: Build
+- **runs-on**: Executa em um runner com Ubuntu.
+    - **needs**: Esta tarefa depende da conclusão bem-sucedida das tarefas `golangci`, `test` e `check_gitflow_conformance`.
+- **steps**: Prepara Go, checa o código e compila o projeto.
+    - **Set up Go**: Configura Go 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Build**: Compila o projeto usando o comando `go build`.
+
+Cada job é executado em uma instância separada do Ubuntu na versão mais recente disponível para GitHub Actions, garantindo que o código seja revisado por padrões de nomenclatura, qualidade (via linting), por testes automatizados e, finalmente, que seja compilável. A dependência explícita do job `build` para os demais jobs (`golangci`, `test`, `check_gitflow_conformance`) assegura que a compilação só acontecerá se todas as verificações preliminares tiverem sucesso.
+
+## Criação e publicação de imagem docker no DockerHub
 
 ### Pré-requisitos:
 
@@ -35,7 +79,7 @@ Primeiro, configure os segredos (secrets) no repositório GitHub para armazenar 
 
 - No seu repositório, navegue até a aba "Actions" > "New workflow" > "set up a workflow yourself" ou crie um novo arquivo `.yml` em `.github/workflows` no seu repositório. Por exemplo: `.github/workflows/docker-publish.yml`.
 
-Aqui está um exemplo de um arquivo de workflow que constrói e publica uma imagem Docker no Docker Hub quando um comentário "dockerhub" é feito em um pull request:
+Aqui está o código do arquivo de workflow que constrói e publica uma imagem Docker no Docker Hub quando um comentário "dockerhub" é feito em um pull request:
 
 ```yaml
 name: Build and Publish Docker image
@@ -75,69 +119,9 @@ jobs:
 
 Para acionar este workflow, vá até um pull request existente no seu repositório e adicione um comentário com o texto "dockerhub". O GitHub Actions verificará automaticamente o comentário, e se corresponder à condição definida (`contains(github.event.comment.body, 'dockerhub')`), iniciará o processo de construção e publicação da imagem no Docker Hub.
 
-## Realizar teste ao comentar
-
-O arquivo test-on-comment.yml é um arquivo de workflow do GitHub Actions configurado para executar testes unitários em resposta a um comentário específico feito em um Pull Request. A estrutura do arquivo é definida em partes distintas para estabelecer gatilhos, trabalhos e etapas a serem executadas.
-
-### Início do arquivo: Definição do nome e evento de gatilho
-
-```yaml
-name: PR Comment Trigger
-
-on:
-  issue_comment:
-    types:
-      - created
-```
-
-**Descrição**:
-- `name: PR Comment Trigger`: Define o nome do workflow como "PR Comment Trigger".
-- `on: issue_comment: types: [- created]`: Especifica que esse workflow é ativado quando um comentário é criado numa issue. Como Pull Requests (PRs) são tratados como tipos especiais de issues no GitHub, isso significa que o workflow será ativado por comentários em Pull Requests também.
-
-### Job: `comment-trigger`
-
-```yaml
-jobs:
-  comment-trigger:
-    runs-on: ubuntu-latest
-```
-
-**Descrição**:
-- Define um job chamado `comment-trigger`.
-- `runs-on: ubuntu-latest`: Especifica que o job será executado no ambiente Ubuntu mais recente disponível.
-
-### Passos para executar:
-
-#### Checkout do Código
-
-```yaml
-- name: Check out code
-  uses: actions/checkout@v2
-```
-
-**Descrição**:
-- `name: Check out code`: Define o nome desta etapa como "Check out code".
-- `uses: actions/checkout@v2`: Usa a action `checkout@v2` para clonar o repositório do código-fonte para o ambiente de execução do GitHub Actions, possibilitando a realização de testes no código.
-
-#### Execução Condicionada por Comentário no PR
-
-```yaml
-- name: Run on PR comment
-  if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'teste')
-  run: |
-    echo "The trigger comment was found in the PR comment. Running your job now."
-    go test -cover -race -vet=off ./...
-```
-
-**Descrição**:
-- `name: Run on PR comment`: Define o nome desta etapa como "Run on PR comment".
-- `if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'teste')`: Este if condicional verifica duas coisas: primeiro, se o evento que desencadeou o workflow foi um comentário em issue (que inclui PRs); segundo, se o corpo do comentário contém a palavra "teste". Somente se ambas as condições forem verdadeiras o workflow prossegue para a execução dos comandos dentro do bloco `run`.
-- O primeiro comando `echo` dentro do bloco `run` é uma mensagem de confirmação de que o comentário de gatilho foi encontrado e o job será executado.
-- O segundo comando `go test -cover -race -vet=off ./...` executa os testes unitários do código Go, com flags que habilitam a verificação de cobertura de código, a detecção de condições de corrida e desabilita o 'vet' (uma ferramenta de análise estática de código Go) para todos os subpacotes do diretório atual.
-
 ## Realizar deploy no Cloud Run ao comentar
 
-O arquivo deploy-on-comment é um arquivo de workflow do GitHub Actions configurado para realizar o deploy de uma aplicação no Google Cloud Run quando um comentário contendo a palavra "deploy" é feito em um Pull Request (PR).
+O arquivo clou-run-deploy-on-comment é um arquivo de workflow do GitHub Actions configurado para realizar o deploy de uma aplicação no Google Cloud Run quando um comentário contendo a palavra "deploy" é feito em um Pull Request (PR).
 
 ### Fluxo de funcionamento
 
