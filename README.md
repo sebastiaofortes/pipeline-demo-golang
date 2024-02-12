@@ -2,10 +2,11 @@
 
 Esse projeto configura uma pipeline de CI/CD usando GitHub Actions em uma aplicação Golang para fazer as seguintes tarefas:
 
+- Verificação da integração contínua e a qualidade do código
+  - Verificação de linter no código.
+  - Verificação de testes unitários e de integração.
+  - Verificação de build
 - Criação e publicação de imagem docker no DockerHub 
-- Verificação de linter no código.
-- Verificação de testes unitários e de integração.
-- Verificação de build
 - Deploy no servioço Google Cloud Run.
 
 
