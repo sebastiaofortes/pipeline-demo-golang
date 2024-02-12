@@ -9,7 +9,20 @@ on:
   pull_request:
   
 jobs:
-          
+
+  check_gitflow_conformance:
+    name: Verify GitFlow Branch Naming
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check GitFlow Branch Naming
+        run: |
+          echo "Branch name: ${{ github.head_ref }}"
+          if [[ "${{ github.head_ref }}" =~ ^feature\/.+|^bugfix\/.+|^hotfix\/.+|^release\/.+ ]]; then
+            echo "Branch name conforms to GitFlow standards."
+          else
+            echo "Branch name does NOT conform to GitFlow standards."
+            exit 1
+          fi        
   golangci:
     name: Lint
     runs-on: ubuntu-latest
