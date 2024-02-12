@@ -43,7 +43,7 @@
 #   Cloud Run IAM permissions           - https://cloud.google.com/run/docs/deploying-source-code#permissions_required_to_deploy
 #   Cloud Run builds from source        - https://cloud.google.com/run/docs/deploying-source-code
 #   Principle of least privilege        - https://cloud.google.com/blog/products/identity-security/dont-get-pwned-practicing-the-principle-of-least-privilege
-name: Deploy on PR comment
+name: Deploy on Google Cloud Run
 
 on:
   issue_comment:
