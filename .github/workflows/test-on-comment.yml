@@ -1,4 +1,4 @@
-name: PR Comment Trigger
+name: Perform code tests
 
 on:
   issue_comment:
