@@ -12,7 +12,7 @@ func main()  {
 	fmt.Println(hello.HelloGitHub())
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("Hello World"))
+		_, err := w.Write([]byte("Hello Sebastião"))
 		if err != nil{
 			fmt.Println(err)
 		}
