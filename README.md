@@ -2,13 +2,57 @@
 
 Esse projeto configura uma pipeline de CI/CD usando GitHub Actions em uma aplicação Golang para fazer as seguintes tarefas:
 
-- Verificação da integração contínua e a qualidade do código
+- Verificação da integração contínua e qualidade do código
   - Verificação de linter no código.
   - Verificação de testes unitários e de integração.
   - Verificação de build
 - Criação e publicação de imagem docker no DockerHub 
 - Deploy no servioço Google Cloud Run.
 
+## Verificação da integração contínua e qualidade do código
+
+O arquivo continous-integration.yaml define um pipeline de integração contínua (CI) nomeado "CI pipeline" que executa várias ações relacionadas à verificação de conformidade com a nomenclatura de branches, linting, teste e build de código, orientado principalmente para projetos Golang. Abaixo, você encontrará uma explicação detalhada de cada etapa desse pipeline:
+
+### Gatilhos do Workflow
+
+- **on:** Este pipeline é acionado por dois eventos principais:
+    - **push**: Quando há um push na branch `master` (incluindo tags, embora a especificação de tags esteja vazia aqui, indicando que o push de tags não ativa este pipeline).
+    - **pull_request**: Em qualquer pull request que vise a branch `master`.
+
+### Jobs (Tarefas)
+
+#### 1. `check_gitflow_conformance`
+- **Name**: GitFlow Branch Naming
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Contém a etapa para verificação do nome da branch.
+    - Verifica se o nome da branch segue as convenções do GitFlow (`feature/`, `bugfix/`, `hotfix/`, `release/`). Se não seguir, o script sinaliza erro e encerra o processo com `exit 1`.
+
+#### 2. `golangci`
+- **Name**: Lint
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Efetua a configuração da versão do Go, checa o código e executa o linter no código Go usando a action `golangci/golangci-lint-action@v3`.
+    - **Set up Go**: Configura o ambiente com Go versão 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Lint Go Code**: Executa o golangci-lint, que é uma ferramenta de análise estática para o código Go.
+
+#### 3. `test`
+- **Name**: Test
+- **runs-on**: Executa em um runner com Ubuntu.
+- **steps**: Prepara o ambiente Go, checa o código e executa testes unitários.
+    - **Set up Go**: Configura o Go 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Run unit Tests.**: Executa testes unitários com cobertura e opção `-race` para detecção de race conditions, excluindo verificações com `go vet`.
+
+#### 4. `build`
+- **Name**: Build
+- **runs-on**: Executa em um runner com Ubuntu.
+    - **needs**: Esta tarefa depende da conclusão bem-sucedida das tarefas `golangci`, `test` e `check_gitflow_conformance`.
+- **steps**: Prepara Go, checa o código e compila o projeto.
+    - **Set up Go**: Configura Go 1.18.
+    - **Check out code**: Faz checkout do código.
+    - **Build**: Compila o projeto usando o comando `go build`.
+
+Cada job é executado em uma instância separada do Ubuntu na versão mais recente disponível para GitHub Actions, garantindo que o código seja revisado por padrões de nomenclatura, qualidade (via linting), por testes automatizados e, finalmente, que seja compilável. A dependência explícita do job `build` para os demais jobs (`golangci`, `test`, `check_gitflow_conformance`) assegura que a compilação só acontecerá se todas as verificações preliminares tiverem sucesso.
 
 ## Criação e publicação de imagem docker no DockerHub
 
@@ -77,7 +121,7 @@ Para acionar este workflow, vá até um pull request existente no seu repositór
 
 ## Realizar deploy no Cloud Run ao comentar
 
-O arquivo deploy-on-comment é um arquivo de workflow do GitHub Actions configurado para realizar o deploy de uma aplicação no Google Cloud Run quando um comentário contendo a palavra "deploy" é feito em um Pull Request (PR).
+O arquivo clou-run-deploy-on-comment é um arquivo de workflow do GitHub Actions configurado para realizar o deploy de uma aplicação no Google Cloud Run quando um comentário contendo a palavra "deploy" é feito em um Pull Request (PR).
 
 ### Fluxo de funcionamento
 
