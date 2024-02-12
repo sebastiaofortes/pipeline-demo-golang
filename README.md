@@ -8,9 +8,8 @@ Esse projeto configura uma pipeline de CI/CD usando GitHub Actions em uma aplica
 - Verificação de build
 - Deploy no servioço Google Cloud Run.
 
-Você precisa seguir alguns passos.
 
-## Gerar imagem e enviar ao Dockerhub ao comentar
+## Criação e publicação de imagem docker no DockerHub
 
 ### Pré-requisitos:
 
@@ -35,7 +34,7 @@ Primeiro, configure os segredos (secrets) no repositório GitHub para armazenar 
 
 - No seu repositório, navegue até a aba "Actions" > "New workflow" > "set up a workflow yourself" ou crie um novo arquivo `.yml` em `.github/workflows` no seu repositório. Por exemplo: `.github/workflows/docker-publish.yml`.
 
-Aqui está um exemplo de um arquivo de workflow que constrói e publica uma imagem Docker no Docker Hub quando um comentário "dockerhub" é feito em um pull request:
+Aqui está o código do arquivo de workflow que constrói e publica uma imagem Docker no Docker Hub quando um comentário "dockerhub" é feito em um pull request:
 
 ```yaml
 name: Build and Publish Docker image
@@ -74,66 +73,6 @@ jobs:
 #### 3. Acionando o Workflow
 
 Para acionar este workflow, vá até um pull request existente no seu repositório e adicione um comentário com o texto "dockerhub". O GitHub Actions verificará automaticamente o comentário, e se corresponder à condição definida (`contains(github.event.comment.body, 'dockerhub')`), iniciará o processo de construção e publicação da imagem no Docker Hub.
-
-## Realizar teste ao comentar
-
-O arquivo test-on-comment.yml é um arquivo de workflow do GitHub Actions configurado para executar testes unitários em resposta a um comentário específico feito em um Pull Request. A estrutura do arquivo é definida em partes distintas para estabelecer gatilhos, trabalhos e etapas a serem executadas.
-
-### Início do arquivo: Definição do nome e evento de gatilho
-
-```yaml
-name: PR Comment Trigger
-
-on:
-  issue_comment:
-    types:
-      - created
-```
-
-**Descrição**:
-- `name: PR Comment Trigger`: Define o nome do workflow como "PR Comment Trigger".
-- `on: issue_comment: types: [- created]`: Especifica que esse workflow é ativado quando um comentário é criado numa issue. Como Pull Requests (PRs) são tratados como tipos especiais de issues no GitHub, isso significa que o workflow será ativado por comentários em Pull Requests também.
-
-### Job: `comment-trigger`
-
-```yaml
-jobs:
-  comment-trigger:
-    runs-on: ubuntu-latest
-```
-
-**Descrição**:
-- Define um job chamado `comment-trigger`.
-- `runs-on: ubuntu-latest`: Especifica que o job será executado no ambiente Ubuntu mais recente disponível.
-
-### Passos para executar:
-
-#### Checkout do Código
-
-```yaml
-- name: Check out code
-  uses: actions/checkout@v2
-```
-
-**Descrição**:
-- `name: Check out code`: Define o nome desta etapa como "Check out code".
-- `uses: actions/checkout@v2`: Usa a action `checkout@v2` para clonar o repositório do código-fonte para o ambiente de execução do GitHub Actions, possibilitando a realização de testes no código.
-
-#### Execução Condicionada por Comentário no PR
-
-```yaml
-- name: Run on PR comment
-  if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'teste')
-  run: |
-    echo "The trigger comment was found in the PR comment. Running your job now."
-    go test -cover -race -vet=off ./...
-```
-
-**Descrição**:
-- `name: Run on PR comment`: Define o nome desta etapa como "Run on PR comment".
-- `if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'teste')`: Este if condicional verifica duas coisas: primeiro, se o evento que desencadeou o workflow foi um comentário em issue (que inclui PRs); segundo, se o corpo do comentário contém a palavra "teste". Somente se ambas as condições forem verdadeiras o workflow prossegue para a execução dos comandos dentro do bloco `run`.
-- O primeiro comando `echo` dentro do bloco `run` é uma mensagem de confirmação de que o comentário de gatilho foi encontrado e o job será executado.
-- O segundo comando `go test -cover -race -vet=off ./...` executa os testes unitários do código Go, com flags que habilitam a verificação de cobertura de código, a detecção de condições de corrida e desabilita o 'vet' (uma ferramenta de análise estática de código Go) para todos os subpacotes do diretório atual.
 
 ## Realizar deploy no Cloud Run ao comentar
 
