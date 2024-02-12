@@ -2,12 +2,78 @@
 
 Esse projeto configura uma pipeline de CI/CD usando GitHub Actions em uma aplicação Golang para fazer as seguintes tarefas:
 
+- Criação e publicação de imagem docker no DockerHub 
 - Verificação de linter no código.
 - Verificação de testes unitários e de integração.
 - Verificação de build
 - Deploy no servioço Google Cloud Run.
 
 Você precisa seguir alguns passos.
+
+## Gerar imagem e enviar ao Dockerhub ao comentar
+
+### Pré-requisitos:
+
+1. **Conta no Docker Hub:** Você precisa de uma conta no Docker Hub para publicar imagens. Se não tiver, crie uma em [Docker Hub](https://hub.docker.com/).
+
+2. **Repositório GitHub:** Você deve ter um repositório no GitHub com acesso para configurar Actions.
+
+3. **Dockerfile:** O projeto no GitHub deve ter um Dockerfile. Assim, o GitHub Actions pode construir a imagem Docker baseada neste arquivo.
+
+### Passos para Configuração:
+
+#### 1. Configurar Secrets do GitHub
+
+Primeiro, configure os segredos (secrets) no repositório GitHub para armazenar suas credenciais do Docker Hub de forma segura.
+
+- Acesse o repositório GitHub > Settings > Secrets > New repository secret.
+- Adicione dois segredos:
+  - `DOCKER_USERNAME`: seu nome de usuário do Docker Hub.
+  - `DOCKER_PASSWORD`: sua senha ou token de acesso do Docker Hub.
+
+#### 2. Criando o Workflow do GitHub Actions
+
+- No seu repositório, navegue até a aba "Actions" > "New workflow" > "set up a workflow yourself" ou crie um novo arquivo `.yml` em `.github/workflows` no seu repositório. Por exemplo: `.github/workflows/docker-publish.yml`.
+
+Aqui está um exemplo de um arquivo de workflow que constrói e publica uma imagem Docker no Docker Hub quando um comentário "dockerhub" é feito em um pull request:
+
+```yaml
+name: Build and Publish Docker image
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  build-and-publish:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'dockerhub')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: seuusuario/nomeimagem:latest
+
+```
+
+**Notas:**
+- Substitua `seuusuario/nomeimagem` pelo seu usuário do Docker Hub e pelo nome que deseja dar à sua imagem.
+- Este script especificamente procura por comentários em pull requests (não em issues comuns, que também são tecnicamente issues no GitHub). Se o comentário contém a palavra "dockerhub", então o job de construir e publicar a imagem é ativado.
+
+#### 3. Acionando o Workflow
+
+Para acionar este workflow, vá até um pull request existente no seu repositório e adicione um comentário com o texto "dockerhub". O GitHub Actions verificará automaticamente o comentário, e se corresponder à condição definida (`contains(github.event.comment.body, 'dockerhub')`), iniciará o processo de construção e publicação da imagem no Docker Hub.
 
 ## Realizar teste ao comentar
 
