@@ -11,7 +11,7 @@ on:
 jobs:
 
   check_gitflow_conformance:
-    name: Verify GitFlow Branch Naming
+    name: GitFlow Branch Naming
     runs-on: ubuntu-latest
     steps:
       - name: Check GitFlow Branch Naming
@@ -55,7 +55,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest 
-    needs: [golangci, test]
+    needs: [golangci, test, check_gitflow_conformance]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v3
